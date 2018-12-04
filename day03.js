@@ -27,11 +27,31 @@ claims.forEach((x) => {
   }
 })
 
-const res = space.reduce((accum, x) => {
+const p1 = space.reduce((accum, x) => {
   if (x > 1) {
     return accum + 1
   }
   return accum
 }, 0)
 
-console.log(`p1 ${res}`)
+console.log(`p1 ${p1}`)
+
+let p2 = 0
+
+claims.forEach((x) => {
+  let overlap = false
+
+  for (let i = 0; i < x.width; i++) {
+    for (let j = 0; j < x.height; j++) {
+      if (space[(x.top + j) * 1000 + (x.left + i)] !== 1) {
+        overlap = true
+      }
+    }
+  }
+
+  if (!overlap) {
+    p2 = x.id
+  }
+})
+
+console.log(`p2 ${p2}`)
