@@ -18,7 +18,7 @@ function createSubTree (input, idx) {
 
   for (let i = 0; i < childNodeCount; i++) {
     const s = createSubTree(input, idx)
-    subtree.children.push(s.children)
+    subtree.children.push(s.node)
     idx = s.idx
   }
 
@@ -34,6 +34,23 @@ function createSubTree (input, idx) {
   }
 }
 
-createSubTree(input, 0)
+function getNodeValue (node) {
+  if (node.children.length > 0) {
+    return node.metadata.reduce((accum, n) => {
+      if (n - 1 < node.children.length) {
+        return accum + getNodeValue(node.children[n - 1])
+      } else {
+        return accum
+      }
+    }, 0)
+  } else {
+    return node.metadata.reduce((accum, n) => accum + n)
+  }
+}
+
+const { node } = createSubTree(input, 0)
+
+const value = getNodeValue(node)
 
 console.log('p1', metadataSum)
+console.log('p2', value)
