@@ -1,8 +1,10 @@
 const fs = require('fs')
 
+const P2MULIPLIER = 100 // use 1 to solve part 1, 100 to solve part 2
+
 const input = {
   players: 418,
-  marbles: 71339
+  marbles: 71339 * P2MULIPLIER
 }
 // const input = {
 //   players: 10,
