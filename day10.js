@@ -13,10 +13,10 @@ const pointCloud = input.map((x) => {
   }
 })
 
-// const canvasXSizeMin = Number.MAX_SAFE_INTEGER
-// const canvasYSizeMin = Number.MAX_SAFE_INTEGER
+let canvasXSizeMin = Number.MAX_SAFE_INTEGER
+let canvasYSizeMin = Number.MAX_SAFE_INTEGER
 
-for (let i = 0; i < 11000; i++) {
+for (let i = 0; ; i++) {
   pointCloud.forEach((pt) => {
     pt.px += pt.vx
     pt.py += pt.vy
@@ -27,10 +27,26 @@ for (let i = 0; i < 11000; i++) {
   const minY = Math.min(...pointCloud.map((pt) => pt.py))
   const maxY = Math.max(...pointCloud.map((pt) => pt.py))
 
-  // const shrinking = false
+  let shrinking = true
 
-  // if (minX = )
-  if (i === 10374) {
+  if (maxX - minX < canvasXSizeMin) {
+    canvasXSizeMin = maxX - minX
+  } else {
+    shrinking = false
+  }
+
+  if (maxY - minY < canvasYSizeMin) {
+    canvasYSizeMin = maxY - minY
+  } else {
+    shrinking = false
+  }
+
+  if (!shrinking) {
+    pointCloud.forEach((pt) => {
+      pt.px -= pt.vx
+      pt.py -= pt.vy
+    })
+
     console.log('---------START-----: ', i)
     const field = []
     for (let y = minY; y < maxY + 1; y++) {
@@ -51,7 +67,7 @@ for (let i = 0; i < 11000; i++) {
     })
 
     console.log('---------END-----: ', i)
+
+    break
   }
 }
-
-// just visually confirm the value.. this is dumb, but I don't know what else to do...
