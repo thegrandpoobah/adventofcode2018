@@ -23,26 +23,30 @@ for (let y = 0; y < 300; y++) {
 let largestTotalPower = Number.MIN_SAFE_INTEGER
 let coordX = 0
 let coordY = 0
+let size = 1
 
-for (let y = 0; y < 297; y++) {
-  for (let x = 0; x < 297; x++) {
-    sum = grid[y * 300 + x] +
-      grid[y * 300 + (x + 1)] +
-      grid[y * 300 + (x + 2)] +
-      grid[(y + 1) * 300 + x] +
-      grid[(y + 1) * 300 + (x + 1)] +
-      grid[(y + 1) * 300 + (x + 2)] +
-      grid[(y + 2) * 300 + x] +
-      grid[(y + 2) * 300 + (x + 1)] +
-      grid[(y + 2) * 300 + (x + 2)]
+for (let s = 1; s < 300; s++) {
+  console.log(s)
 
-    if (sum > largestTotalPower) {
-      largestTotalPower = sum
+  for (let y = 0; y < 300 - (s - 1); y++) {
+    for (let x = 0; x < 300 - (s - 1); x++) {
+      sum = 0
 
-      coordX = x
-      coordY = y
+      for (let pY = 0; pY < s; pY++) {
+        for (let pX = 0; pX < s; pX++) {
+          sum += grid[(y + pY) * 300 + (x + pX)]
+        }
+      }
+
+      if (sum > largestTotalPower) {
+        largestTotalPower = sum
+
+        coordX = x
+        coordY = y
+        size = s
+      }
     }
   }
 }
 
-console.log(`p1 ${coordX},${coordY}`)
+console.log(`p1 ${coordX},${coordY},${size}`)
