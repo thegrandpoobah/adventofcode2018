@@ -11,7 +11,6 @@ for (let i = 0; i < 20; i++) {
   workingSet = backbuffer
   backbuffer = ''
 
-  console.log(i, workingSet, workingSet.length)
   for (let x = -2; x < workingSet.length + 2; x++) {
     let rule = workingSet.substr(Math.max(x - 2, 0), 5 + Math.min(x - 2, 0))
     if (x < 2) {
@@ -24,9 +23,7 @@ for (let i = 0; i < 20; i++) {
       }
     }
 
-    // console.log(rule, input.productions[rule])
     if (input.productions[rule]) {
-      // console.log(input.productions[rule])
       backbuffer += input.productions[rule]
     } else {
       backbuffer += '.'
@@ -50,8 +47,6 @@ for (let i = 0; i < 20; i++) {
 }
 
 workingSet = backbuffer
-
-console.log(20, workingSet)
 
 let sum = 0
 
