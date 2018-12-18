@@ -93,7 +93,8 @@ setCell(grid, {
   x: 500,
   y: yBoundaryMin,
   type: CELL_TYPE_WATER,
-  flowDirection: FLOW_DIRECTION_DOWN
+  flowDirection: FLOW_DIRECTION_DOWN,
+  overflow: true
 })
 
 function renderGrid (g) {
@@ -104,6 +105,8 @@ function renderGrid (g) {
         process.stdout.write('.')
       } else if (v.type === CELL_TYPE_CLAY) {
         process.stdout.write('#')
+      } else if (v.type === CELL_TYPE_WATER && v.overflow) {
+        process.stdout.write('|')
       } else if (v.type === CELL_TYPE_WATER) {
         process.stdout.write('~')
       }
@@ -136,7 +139,8 @@ for (let i = 0; backBuffer.length > 0; i++) {
             x: thisCell.x,
             y: thisCell.y,
             type: CELL_TYPE_WATER,
-            flowDirection: FLOW_DIRECTION_ACROSS
+            flowDirection: FLOW_DIRECTION_ACROSS,
+            overflow: true
           })
 
           backBuffer.push({ x: thisCell.x, y: thisCell.y })
@@ -145,14 +149,16 @@ for (let i = 0; backBuffer.length > 0; i++) {
             x: thisCell.x,
             y: thisCell.y,
             type: CELL_TYPE_WATER,
-            flowDirection: FLOW_DIRECTION_DOWN
+            flowDirection: FLOW_DIRECTION_DOWN,
+            overflow: true
           })
 
           setCell(grid, {
             x: thisCell.x,
             y: thisCell.y + 1,
             type: CELL_TYPE_WATER,
-            flowDirection: FLOW_DIRECTION_DOWN
+            flowDirection: FLOW_DIRECTION_DOWN,
+            overflow: true
           })
 
           backBuffer.push({ x: thisCell.x, y: thisCell.y + 1 })
@@ -160,6 +166,15 @@ for (let i = 0; backBuffer.length > 0; i++) {
 
         break
       case FLOW_DIRECTION_ACROSS:
+        const addedAcross = [{ x: thisCell.x, y: thisCell.y }]
+
+        setCell(grid, {
+          x: thisCell.x,
+          y: thisCell.y,
+          type: CELL_TYPE_WATER,
+          flowDirection: FLOW_DIRECTION_STABLE
+        })
+
         let hasLeftBorder = false
         for (let nx = thisCell.x - 1; nx > xBoundaryMin - 10; nx--) {
           if (cellHasClay(nx, thisCell.y)) {
@@ -178,6 +193,8 @@ for (let i = 0; backBuffer.length > 0; i++) {
               type: CELL_TYPE_WATER,
               flowDirection: FLOW_DIRECTION_ACROSS
             })
+
+            addedAcross.push({ x: nx, y: thisCell.y })
           } else {
             // nothing underneath, so now go down
             setCell(grid, {
@@ -188,6 +205,7 @@ for (let i = 0; backBuffer.length > 0; i++) {
             })
 
             backBuffer.push({ x: nx, y: thisCell.y })
+            addedAcross.push({ x: nx, y: thisCell.y })
 
             break
           }
@@ -211,6 +229,7 @@ for (let i = 0; backBuffer.length > 0; i++) {
               type: CELL_TYPE_WATER,
               flowDirection: FLOW_DIRECTION_ACROSS
             })
+            addedAcross.push({ x: nx, y: thisCell.y })
           } else {
             // nothing underneath, so now go down
             setCell(grid, {
@@ -221,6 +240,7 @@ for (let i = 0; backBuffer.length > 0; i++) {
             })
 
             backBuffer.push({ x: nx, y: thisCell.y })
+            addedAcross.push({ x: nx, y: thisCell.y })
 
             break
           }
@@ -235,14 +255,11 @@ for (let i = 0; backBuffer.length > 0; i++) {
           })
 
           backBuffer.push({ x: thisCell.x, y: thisCell.y - 1 })
+        } else {
+          addedAcross.forEach((c) => {
+            grid[`${c.x}:${c.y}`].overflow = true
+          })
         }
-
-        setCell(grid, {
-          x: thisCell.x,
-          y: thisCell.y,
-          type: CELL_TYPE_WATER,
-          flowDirection: FLOW_DIRECTION_STABLE
-        })
 
         break
     }
@@ -261,3 +278,16 @@ const waterCells = Object.keys(grid).reduce((accum, key) => {
 }, 0)
 
 console.log('p1', waterCells)
+
+const pooledCells = Object.keys(grid).reduce((accum, key) => {
+  if (grid[key].type === CELL_TYPE_WATER && !grid[key].overflow) {
+    if (grid[key].y < yBoundaryMin || grid[key].y > yBoundaryMax) {
+      return accum
+    }
+
+    return accum + 1
+  }
+  return accum
+}, 0)
+
+console.log('p2', pooledCells)
