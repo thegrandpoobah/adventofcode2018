@@ -159,89 +159,91 @@ function shortestPath (grid, p1, p2) {
 const grid = initialize(input)
 
 let stoppedAt
-for (let iteration = 0; ; iteration++) {
+for (let iteration = 0; /*iteration < 3*/; iteration++) {
   console.log(`iteration ${iteration}`)
 
   renderGrid(grid)
 
-  let anyActions = false
+  // let anyActions = false
 
-  console.log(allGoblins(grid))
-  console.log(allElves(grid))
+  // console.log(allGoblins(grid))
+  // console.log(allElves(grid))
 
   allPlayers(grid).forEach((p1) => {
-    let paths
-    let foes
+    function findClosestFoe (p1) {
+      let paths
+      let foes
 
-    if (p1.type === CELL_TYPE_ELF) {
-      foes = allGoblins(grid)
-    } else if (p1.type === CELL_TYPE_GOBLIN) {
-      foes = allElves(grid)
-    } else {
-      // this player died mid-round
-      return
-    }
-
-    if (foes.length === 0) {
-      stoppedAt = iteration
-
-      return
-    }
-
-    paths = foes.map((p2) => shortestPath(grid, p1, p2))
-
-    if (!paths) {
-      console.log('no more enemies', iteration)
-
-      return
-    }
-
-    const traversalPath = paths.reduce((accum, path) => {
-      if (!path) {
-        // no way to get to this enemy, so just return whatever we have right now
-        return accum
+      if (p1.type === CELL_TYPE_ELF) {
+        foes = allGoblins(grid)
+      } else if (p1.type === CELL_TYPE_GOBLIN) {
+        foes = allElves(grid)
+      } else {
+        // this player died mid-round
+        return
       }
 
-      if (!accum) {
-        // don't have an enemy considered right now, so lets just return this one
-        return path
+      if (foes.length === 0) {
+        stoppedAt = iteration
+
+        return
       }
 
-      if (path.length < accum.length) {
-        // this enemy is closer, so lets use this one
-        return path
+      paths = foes.map((p2) => shortestPath(grid, p1, p2))
+
+      if (!paths) {
+        console.log('no more enemies', iteration)
+
+        return
       }
 
-      if (path.length === 2 && path.length === accum.length) {
-        // the enemies are the same distance, so lets use HP tie breaker
-        // console.log('tie breaker', accum, path)
-        const enemy1Coords = accum[accum.length - 1]
-        const enemy2Coords = path[path.length - 1]
+      return paths.reduce((accum, path) => {
+        if (!path) {
+          // no way to get to this enemy, so just return whatever we have right now
+          return accum
+        }
 
-        const enemy1 = getCell(grid, enemy1Coords.x, enemy1Coords.y)
-        const enemy2 = getCell(grid, enemy2Coords.x, enemy2Coords.y)
-        console.log(enemy1, enemy2)
-
-        if (enemy2.hp < enemy1.hp) {
+        if (!accum) {
+          // don't have an enemy considered right now, so lets just return this one
           return path
         }
-      }
 
-      // the current enemy is closer or has fewer hit points, so lets just use that one
-      return accum
-    }, undefined)
+        if (path.length < accum.length) {
+          // this enemy is closer, so lets use this one
+          return path
+        }
+
+        if (path.length === 2 && path.length === accum.length) {
+          // the enemies are the same distance, so lets use HP tie breaker
+          // console.log('tie breaker', accum, path)
+          const enemy1Coords = accum[accum.length - 1]
+          const enemy2Coords = path[path.length - 1]
+
+          const enemy1 = getCell(grid, enemy1Coords.x, enemy1Coords.y)
+          const enemy2 = getCell(grid, enemy2Coords.x, enemy2Coords.y)
+          console.log(enemy1, enemy2)
+
+          if (enemy2.hp < enemy1.hp) {
+            return path
+          }
+        }
+
+        // the current enemy is closer or has fewer hit points, so lets just use that one
+        return accum
+      }, undefined)
+    }
+
+    let traversalPath = findClosestFoe(p1)
 
     if (!traversalPath) {
       // this player has no action at this point
-      console.log(p1, 'cannot do anything')
+      // console.log(p1, 'cannot do anything')
 
       return
     }
 
     if (traversalPath.length > 2) {
       // we need to move
-      // movements.push(traversalPath)
-
       const [p1Coords, targetCoords] = traversalPath
       const player = getCell(grid, p1Coords.x, p1Coords.y)
 
@@ -259,20 +261,25 @@ for (let iteration = 0; ; iteration++) {
     }
 
     if (traversalPath.length === 2) {
-      // traversalPath[0] fights traveralPath[1]
-      const [p1Coords, p2Coords] = traversalPath
+      // player is adjecent to an enemy for sure
+      // but it might need to re-evaluate who to fight
+      const playerCoords = traversalPath[0]
 
-      console.log(`battle ${p1Coords.x},${p1Coords.y} with ${p2Coords.x},${p2Coords.y}`)
+      const player = getCell(grid, playerCoords.x, playerCoords.y)
+      traversalPath = findClosestFoe(player)
 
-      const p1 = getCell(grid, p1Coords.x, p1Coords.y)
-      const p2 = getCell(grid, p2Coords.x, p2Coords.y)
+      const enemyCoords = traversalPath[1]
 
-      p2.hp -= p1.attackPower
+      console.log(`battle ${playerCoords.x},${playerCoords.y} with ${enemyCoords.x},${enemyCoords.y}`)
 
-      console.log('hp at', p2.hp, p1.attackPower)
+      const enemy = getCell(grid, enemyCoords.x, enemyCoords.y)
 
-      if (p2.hp < 0) {
-        p2.type = CELL_TYPE_EMPTY
+      enemy.hp -= player.attackPower
+
+      console.log('hp at', enemy.hp, player.attackPower)
+
+      if (enemy.hp < 0) {
+        enemy.type = CELL_TYPE_EMPTY
       }
     }
   })
@@ -287,6 +294,7 @@ for (let iteration = 0; ; iteration++) {
   // })
 }
 
+console.log(allPlayers(grid))
 console.log('stopped at', stoppedAt)
 let sumHp = allPlayers(grid).reduce((accum, player) => {
   return accum + player.hp
