@@ -8,8 +8,9 @@ const DEFAULT_HITPOINTS = 200
 
 const fs = require('fs')
 
+console.log(process.argv[2])
 // const input = fs.readFileSync('day15sample-5.txt', { encoding: 'utf8' }).split('\n')
-const input = fs.readFileSync('day15input.txt', { encoding: 'utf8' }).split('\n')
+const input = fs.readFileSync(process.argv[2], { encoding: 'utf8' }).split('\n')
 
 function initialize (input) {
   return input.map((row, yIdx) => {
@@ -109,10 +110,10 @@ function shortestPath (grid, p1, p2) {
   memo[`${p1.x}:${p1.y}`] = [] // the self square doesn't need a traveral path
 
   const searchStack = [
-    { x: p1.x + 1, y: p1.y, path: [{ x: p1.x, y: p1.y }] },
+    { x: p1.x, y: p1.y - 1, path: [{ x: p1.x, y: p1.y }] },
     { x: p1.x - 1, y: p1.y, path: [{ x: p1.x, y: p1.y }] },
-    { x: p1.x, y: p1.y + 1, path: [{ x: p1.x, y: p1.y }] },
-    { x: p1.x, y: p1.y - 1, path: [{ x: p1.x, y: p1.y }] }
+    { x: p1.x + 1, y: p1.y, path: [{ x: p1.x, y: p1.y }] },
+    { x: p1.x, y: p1.y + 1, path: [{ x: p1.x, y: p1.y }] }
   ]
 
   while (searchStack.length > 0) {
@@ -145,9 +146,9 @@ function shortestPath (grid, p1, p2) {
       // only if you found a shorter path to this cell should you continue
       // because otherwise, you've already built the shortest path and can stop
       searchStack.push(...[
+        { x: elem.x, y: elem.y - 1, path: [...elem.path, { x: elem.x, y: elem.y }] },
         { x: elem.x - 1, y: elem.y, path: [...elem.path, { x: elem.x, y: elem.y }] },
         { x: elem.x + 1, y: elem.y, path: [...elem.path, { x: elem.x, y: elem.y }] },
-        { x: elem.x, y: elem.y - 1, path: [...elem.path, { x: elem.x, y: elem.y }] },
         { x: elem.x, y: elem.y + 1, path: [...elem.path, { x: elem.x, y: elem.y }] }
       ])
     }
