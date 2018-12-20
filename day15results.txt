@@ -10,7 +10,7 @@ day15sample-j.txt 216270
 day15sample-r1.txt 245280
 day15sample-r2.txt 197025
 day15sample-r3.txt 191216
-day15input.txt 224370,
+day15input.txt 224370,45539
 
 # number of rounds some corner cases should take
 day15corner-1.txt 67 rounds
