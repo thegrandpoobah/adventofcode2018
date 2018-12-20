@@ -114,32 +114,57 @@ function setCell (grid, x, y, v) {
   grid[y][x] = v
 }
 
+function pathSortFunction (p1, p2) {
+  let c = p1.length - p2.length
+  if (c === 0) {
+    let offset
+    if (p1.length === 1) {
+      offset = 1
+    } else {
+      offset = 2
+    }
+    c = p1[p1.length - offset].y - p2[p2.length - offset].y
+    if (c === 0) {
+      c = p1[p1.length - offset].x - p2[p2.length - offset].x
+      if (c === 0) {
+        c = p1[0].y - p2[0].y
+        if (c === 0) {
+          c = p1[0].x - p2[0].x
+        }
+      }
+    }
+  }
+  return c
+}
+
+// function pathSortFunctionWithHp(p1, p2) {
+//   if (pathSortFunction(p1, p2) === 0) {
+//     return p1.hp 
+//   }
+// }
+
 // find the shortest path from player p1 to player p2 on grid
 function shortestPath (grid, p1, p2) {
-  let shortestPath
+  let paths = []
 
   const memo = {}
   memo[`${p1.x}:${p1.y}`] = [] // the self square doesn't need a traversal path
 
-  const searchStack = [
+  const searchQueue = [
     { x: p1.x, y: p1.y - 1, path: [{ x: p1.x, y: p1.y }] },
     { x: p1.x - 1, y: p1.y, path: [{ x: p1.x, y: p1.y }] },
     { x: p1.x + 1, y: p1.y, path: [{ x: p1.x, y: p1.y }] },
     { x: p1.x, y: p1.y + 1, path: [{ x: p1.x, y: p1.y }] }
   ]
 
-  while (searchStack.length > 0) {
-    const elem = searchStack.shift()
+  while (searchQueue.length > 0) {
+    const elem = searchQueue.shift()
 
     const cell = getCell(grid, elem.x, elem.y)
 
     if (cell.x === p2.x && cell.y === p2.y) {
       // found a way of getting to the target!
-
-      if (!shortestPath || shortestPath.length > elem.path.length + 1) {
-        // the path is shorter!
-        shortestPath = [...elem.path, { x: p2.x, y: p2.y }]
-      }
+      paths.push([...elem.path, { x: p2.x, y: p2.y }])
     }
 
     if (cell.type !== CELL_TYPE_EMPTY) {
@@ -157,7 +182,7 @@ function shortestPath (grid, p1, p2) {
 
       // only if you found a shorter path to this cell should you continue
       // because otherwise, you've already built the shortest path and can stop
-      searchStack.push(...[
+      searchQueue.push(...[
         { x: elem.x, y: elem.y - 1, path: [...elem.path, { x: elem.x, y: elem.y }] },
         { x: elem.x - 1, y: elem.y, path: [...elem.path, { x: elem.x, y: elem.y }] },
         { x: elem.x + 1, y: elem.y, path: [...elem.path, { x: elem.x, y: elem.y }] },
@@ -166,16 +191,18 @@ function shortestPath (grid, p1, p2) {
     }
   }
 
-  return shortestPath
+  paths.sort(pathSortFunction)
+
+  return paths[0]
 }
 
 const grid = initialize(input)
 
+renderGrid(grid)
+
 let stoppedAt
 for (let iteration = 0; /*iteration < 3*/; iteration++) {
-  console.log(`iteration ${iteration}`)
-
-  renderGrid(grid)
+  console.log(`iteration ${iteration + 1}`)
 
   // let anyActions = false
 
@@ -203,47 +230,14 @@ for (let iteration = 0; /*iteration < 3*/; iteration++) {
       }
 
       paths = foes.map((p2) => shortestPath(grid, p1, p2))
+      paths.sort(pathSortFunction)
 
-      if (!paths) {
-        console.log('no more enemies', iteration)
+      return paths[0]
+    }
 
-        return
-      }
-
-      return paths.reduce((accum, path) => {
-        if (!path) {
-          // no way to get to this enemy, so just return whatever we have right now
-          return accum
-        }
-
-        if (!accum) {
-          // don't have an enemy considered right now, so lets just return this one
-          return path
-        }
-
-        if (path.length < accum.length) {
-          // this enemy is closer, so lets use this one
-          return path
-        }
-
-        if (path.length === 2 && path.length === accum.length) {
-          // the enemies are the same distance, so lets use HP tie breaker
-          // console.log('tie breaker', accum, path)
-          const enemy1Coords = accum[accum.length - 1]
-          const enemy2Coords = path[path.length - 1]
-
-          const enemy1 = getCell(grid, enemy1Coords.x, enemy1Coords.y)
-          const enemy2 = getCell(grid, enemy2Coords.x, enemy2Coords.y)
-          console.log(enemy1, enemy2)
-
-          if (enemy2.hp < enemy1.hp) {
-            return path
-          }
-        }
-
-        // the current enemy is closer or has fewer hit points, so lets just use that one
-        return accum
-      }, undefined)
+    if (p1.hp <= 0) {
+      // this player ended up dying this round before its turn could come up
+      return
     }
 
     let traversalPath = findClosestFoe(p1)
@@ -270,6 +264,8 @@ for (let iteration = 0; /*iteration < 3*/; iteration++) {
       player.y = targetCoords.y
       setCell(grid, targetCoords.x, targetCoords.y, player)
 
+      console.log(`move ${p1Coords.x}:${p1Coords.y} to ${targetCoords.x}:${targetCoords.y}`)
+
       traversalPath.shift()
     }
 
@@ -279,13 +275,22 @@ for (let iteration = 0; /*iteration < 3*/; iteration++) {
       const playerCoords = traversalPath[0]
 
       const player = getCell(grid, playerCoords.x, playerCoords.y)
-      traversalPath = findClosestFoe(player)
 
-      const enemyCoords = traversalPath[1]
+      let enemy = { hp: Number.MAX_SAFE_INTEGER }
 
-      console.log(`battle ${playerCoords.x},${playerCoords.y} with ${enemyCoords.x},${enemyCoords.y}`)
+      let q = [{ x: 0, y: -1 }, { x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }]
+      q.forEach((offset) => {
+        const candidate = getCell(grid, playerCoords.x + offset.x, playerCoords.y + offset.y)
 
-      const enemy = getCell(grid, enemyCoords.x, enemyCoords.y)
+        if ((player.type === CELL_TYPE_ELF && candidate.type === CELL_TYPE_GOBLIN) ||
+          (player.type === CELL_TYPE_GOBLIN && candidate.type === CELL_TYPE_ELF)) {
+          if (candidate.hp < enemy.hp) {
+            enemy = candidate
+          }
+        }
+      })
+
+      console.log(`battle ${player.x},${player.y} with ${enemy.x},${enemy.y}`)
 
       enemy.hp -= player.attackPower
 
@@ -300,6 +305,10 @@ for (let iteration = 0; /*iteration < 3*/; iteration++) {
   if (stoppedAt) {
     break
   }
+
+  renderGrid(grid)
+
+  // anyKey()
   // movements.forEach((movement) => {
   //   const [p1Coords, targetCoords] = traversalPath
 
