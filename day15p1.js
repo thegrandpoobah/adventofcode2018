@@ -8,7 +8,12 @@ const DEFAULT_HITPOINTS = 200
 
 const fs = require('fs')
 
-console.log(process.argv[2])
+function anyKey () {
+  var fd = fs.openSync("/dev/stdin", "rs")
+  fs.readSync(fd, new Buffer(1), 0, 1)
+  fs.closeSync(fd)
+}
+
 // const input = fs.readFileSync('day15sample-5.txt', { encoding: 'utf8' }).split('\n')
 const input = fs.readFileSync(process.argv[2], { encoding: 'utf8' }).split('\n')
 
@@ -51,6 +56,8 @@ function initialize (input) {
 
 function renderGrid (grid) {
   grid.forEach((row) => {
+    const players = []
+
     row.forEach((c) => {
       switch (c.type) {
         case CELL_TYPE_EMPTY:
@@ -60,13 +67,18 @@ function renderGrid (grid) {
           process.stdout.write('#')
           break
         case CELL_TYPE_GOBLIN:
+          players.push(`G(${c.hp})`)
           process.stdout.write('G')
           break
         case CELL_TYPE_ELF:
+          players.push(`E(${c.hp})`)
           process.stdout.write('E')
           break
       }
     })
+
+    process.stdout.write('\t')
+    process.stdout.write(players.join(','))
 
     process.stdout.write('\n')
   })
@@ -107,7 +119,7 @@ function shortestPath (grid, p1, p2) {
   let shortestPath
 
   const memo = {}
-  memo[`${p1.x}:${p1.y}`] = [] // the self square doesn't need a traveral path
+  memo[`${p1.x}:${p1.y}`] = [] // the self square doesn't need a traversal path
 
   const searchStack = [
     { x: p1.x, y: p1.y - 1, path: [{ x: p1.x, y: p1.y }] },
@@ -279,7 +291,7 @@ for (let iteration = 0; /*iteration < 3*/; iteration++) {
 
       console.log('hp at', enemy.hp, player.attackPower)
 
-      if (enemy.hp < 0) {
+      if (enemy.hp <= 0) {
         enemy.type = CELL_TYPE_EMPTY
       }
     }
