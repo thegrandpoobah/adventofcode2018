@@ -137,12 +137,6 @@ function pathSortFunction (p1, p2) {
   return c
 }
 
-// function pathSortFunctionWithHp(p1, p2) {
-//   if (pathSortFunction(p1, p2) === 0) {
-//     return p1.hp 
-//   }
-// }
-
 // find the shortest path from player p1 to player p2 on grid
 function shortestPath (grid, p1, p2) {
   let paths = []
@@ -196,130 +190,155 @@ function shortestPath (grid, p1, p2) {
   return paths[0]
 }
 
-const grid = initialize(input)
+function computeScore (input, deadElvesOkay = true, attackPowerBoost = 0) {
+  const grid = initialize(input)
 
-renderGrid(grid)
+  // renderGrid(grid)
 
-let stoppedAt
-for (let iteration = 0; /*iteration < 3*/; iteration++) {
-  console.log(`iteration ${iteration + 1}`)
+  let stoppedAt
+  let deadElves = 0
 
-  // let anyActions = false
+  for (let iteration = 0; /*iteration < 3*/; iteration++) {
+    // console.log(`iteration ${iteration + 1}`)
 
-  // console.log(allGoblins(grid))
-  // console.log(allElves(grid))
+    // console.log(allGoblins(grid))
+    // console.log(allElves(grid))
 
-  allPlayers(grid).forEach((p1) => {
-    function findClosestFoe (p1) {
-      let paths
-      let foes
+    allPlayers(grid).forEach((p1) => {
+      function findClosestFoe (p1) {
+        let paths
+        let foes
 
-      if (p1.type === CELL_TYPE_ELF) {
-        foes = allGoblins(grid)
-      } else if (p1.type === CELL_TYPE_GOBLIN) {
-        foes = allElves(grid)
-      } else {
-        // this player died mid-round
-        return
-      }
-
-      if (foes.length === 0) {
-        stoppedAt = iteration
-
-        return
-      }
-
-      paths = foes.map((p2) => shortestPath(grid, p1, p2))
-      paths.sort(pathSortFunction)
-
-      return paths[0]
-    }
-
-    if (p1.hp <= 0) {
-      // this player ended up dying this round before its turn could come up
-      return
-    }
-
-    let traversalPath = findClosestFoe(p1)
-
-    if (!traversalPath) {
-      // this player has no action at this point
-      // console.log(p1, 'cannot do anything')
-
-      return
-    }
-
-    if (traversalPath.length > 2) {
-      // we need to move
-      const [p1Coords, targetCoords] = traversalPath
-      const player = getCell(grid, p1Coords.x, p1Coords.y)
-
-      setCell(grid, p1Coords.x, p1Coords.y, {
-        x: p1Coords.x,
-        y: p1Coords.y,
-        type: CELL_TYPE_EMPTY
-      })
-
-      player.x = targetCoords.x
-      player.y = targetCoords.y
-      setCell(grid, targetCoords.x, targetCoords.y, player)
-
-      console.log(`move ${p1Coords.x}:${p1Coords.y} to ${targetCoords.x}:${targetCoords.y}`)
-
-      traversalPath.shift()
-    }
-
-    if (traversalPath.length === 2) {
-      // player is adjecent to an enemy for sure
-      // but it might need to re-evaluate who to fight
-      const playerCoords = traversalPath[0]
-
-      const player = getCell(grid, playerCoords.x, playerCoords.y)
-
-      let enemy = { hp: Number.MAX_SAFE_INTEGER }
-
-      let q = [{ x: 0, y: -1 }, { x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }]
-      q.forEach((offset) => {
-        const candidate = getCell(grid, playerCoords.x + offset.x, playerCoords.y + offset.y)
-
-        if ((player.type === CELL_TYPE_ELF && candidate.type === CELL_TYPE_GOBLIN) ||
-          (player.type === CELL_TYPE_GOBLIN && candidate.type === CELL_TYPE_ELF)) {
-          if (candidate.hp < enemy.hp) {
-            enemy = candidate
-          }
+        if (p1.type === CELL_TYPE_ELF) {
+          foes = allGoblins(grid)
+        } else if (p1.type === CELL_TYPE_GOBLIN) {
+          foes = allElves(grid)
+        } else {
+          // this player died mid-round
+          return
         }
-      })
 
-      console.log(`battle ${player.x},${player.y} with ${enemy.x},${enemy.y}`)
+        if (foes.length === 0) {
+          stoppedAt = iteration
 
-      enemy.hp -= player.attackPower
+          return
+        }
 
-      console.log('hp at', enemy.hp, player.attackPower)
+        paths = foes.map((p2) => shortestPath(grid, p1, p2))
+        paths.sort(pathSortFunction)
 
-      if (enemy.hp <= 0) {
-        enemy.type = CELL_TYPE_EMPTY
+        return paths[0]
       }
-    }
-  })
 
-  if (stoppedAt) {
-    break
+      if (p1.hp <= 0) {
+        // this player ended up dying this round before its turn could come up
+        return
+      }
+
+      let traversalPath = findClosestFoe(p1)
+
+      if (!traversalPath) {
+        // this player has no action at this point
+        // console.log(p1, 'cannot do anything')
+
+        return
+      }
+
+      if (traversalPath.length > 2) {
+        // we need to move
+        const [p1Coords, targetCoords] = traversalPath
+        const player = getCell(grid, p1Coords.x, p1Coords.y)
+
+        setCell(grid, p1Coords.x, p1Coords.y, {
+          x: p1Coords.x,
+          y: p1Coords.y,
+          type: CELL_TYPE_EMPTY
+        })
+
+        player.x = targetCoords.x
+        player.y = targetCoords.y
+        setCell(grid, targetCoords.x, targetCoords.y, player)
+
+        // console.log(`move ${p1Coords.x}:${p1Coords.y} to ${targetCoords.x}:${targetCoords.y}`)
+
+        traversalPath.shift()
+      }
+
+      if (traversalPath.length === 2) {
+        // player is adjecent to an enemy for sure
+        // but it might need to re-evaluate who to fight
+        const playerCoords = traversalPath[0]
+
+        const player = getCell(grid, playerCoords.x, playerCoords.y)
+
+        let enemy = { hp: Number.MAX_SAFE_INTEGER }
+
+        let q = [{ x: 0, y: -1 }, { x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }]
+        q.forEach((offset) => {
+          const candidate = getCell(grid, playerCoords.x + offset.x, playerCoords.y + offset.y)
+
+          if ((player.type === CELL_TYPE_ELF && candidate.type === CELL_TYPE_GOBLIN) ||
+            (player.type === CELL_TYPE_GOBLIN && candidate.type === CELL_TYPE_ELF)) {
+            if (candidate.hp < enemy.hp) {
+              enemy = candidate
+            }
+          }
+        })
+
+        //console.log(`battle ${player.x},${player.y} with ${enemy.x},${enemy.y}`)
+
+        enemy.hp -= player.attackPower
+        if (player.type === CELL_TYPE_ELF) {
+          enemy.hp -= attackPowerBoost
+        }
+
+        //console.log('hp at', enemy.hp, player.attackPower)
+
+        if (enemy.hp <= 0) {
+          if (enemy.type === CELL_TYPE_ELF && !deadElvesOkay) {
+            deadElves++
+            console.log('an elf has died. unacceptable')
+          }
+
+          enemy.type = CELL_TYPE_EMPTY
+        }
+      }
+    })
+
+    if (stoppedAt || deadElves !== 0) {
+      break
+    }
+
+    // renderGrid(grid)
+
+    // anyKey()
+    // movements.forEach((movement) => {
+    //   const [p1Coords, targetCoords] = traversalPath
+
+    //   setCell(grid, p1Coords.x, p1Coords.y)
+    // })
   }
 
-  renderGrid(grid)
-
-  // anyKey()
-  // movements.forEach((movement) => {
-  //   const [p1Coords, targetCoords] = traversalPath
-
-  //   setCell(grid, p1Coords.x, p1Coords.y)
-  // })
+  return {
+    iterations: stoppedAt,
+    sumHp: allPlayers(grid).reduce((accum, player) => {
+      return accum + player.hp
+    }, 0),
+    deadElves
+  }
 }
 
-console.log(allPlayers(grid))
-console.log('stopped at', stoppedAt)
-let sumHp = allPlayers(grid).reduce((accum, player) => {
-  return accum + player.hp
-}, 0)
-console.log('sum hp', sumHp)
-console.log(sumHp * stoppedAt)
+const p1Results = computeScore(input)
+console.log('p1', p1Results.iterations * p1Results.sumHp)
+
+for (let attackPowerBoost = 0; ; attackPowerBoost++) {
+  console.log('boosting attack power by', attackPowerBoost)
+
+  const p2Results = computeScore(input, false, attackPowerBoost)
+  if (p2Results.deadElves === 0) {
+    console.log(p2Results)
+    console.log('p2', p2Results.iterations * p2Results.sumHp)
+
+    break
+  }
+}

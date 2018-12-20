@@ -1,14 +1,19 @@
-day15sample.txt 27730
+# the sample file, the correct outcome for p1, the correct outcome for p2
+day15sample.txt 27730,4988
 day15sample-1.txt 36334
-day15sample-2.txt 39514
-day15sample-3.txt 27755
-day15sample-4.txt 28944
-day15sample-5.txt 18740
+day15sample-2.txt 39514,31284
+day15sample-3.txt 27755,3478
+day15sample-4.txt 28944,6474
+day15sample-5.txt 18740,1140
 day15sample-h.txt 201638
 day15sample-j.txt 216270
 day15sample-r1.txt 245280
 day15sample-r2.txt 197025
 day15sample-r3.txt 191216
+day15input.txt 224370,
+
+# number of rounds some corner cases should take
 day15corner-1.txt 67 rounds
 day15corner-2.txt 71 rounds
-day15input.txt 221360 is wrong
+
+day15corner-3.txt is to test that the reading order movement is working correctly
