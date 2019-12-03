@@ -1,6 +1,6 @@
 const fs = require('fs')
 
-const input = fs.readFileSync('day16input.txt', { encoding: 'utf8' }).split('\n')
+const watch = fs.readFileSync('day16watch.txt', { encoding: 'utf8' }).split('\n')
 
 function unpack(input) {
     let [opcode, a, b, c] = input.split(' ').map(x => parseInt(x, 10))
@@ -148,11 +148,11 @@ const ops = [
 
 let threeOrMore = 0
 
-for (let i = 0; i < input.length; i++) {
-    if (input[i].startsWith('Before')) {
-        let before = eval(input[i].replace('Before: ', ''))
-        let op = unpack(input[i + 1])
-        let after = eval(input[i + 2].replace('After: ', ''))
+for (let i = 0; i < watch.length; i++) {
+    if (watch[i].startsWith('Before')) {
+        let before = eval(watch[i].replace('Before: ', ''))
+        let op = unpack(watch[i + 1])
+        let after = eval(watch[i + 2].replace('After: ', ''))
 
         let matches = 0
         for (let j = 0; j < ops.length; j++) {
