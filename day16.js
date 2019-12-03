@@ -148,23 +148,29 @@ const ops = [
 
 let threeOrMore = 0
 
+const cpu = []
+
+for (let i = 0; i < ops.length; i++) {
+    cpu.push(ops.map(x => x))
+}
+
 for (let i = 0; i < watch.length; i++) {
     if (watch[i].startsWith('Before')) {
         let before = eval(watch[i].replace('Before: ', ''))
         let op = unpack(watch[i + 1])
         let after = eval(watch[i + 2].replace('After: ', ''))
 
-        let matches = 0
-        for (let j = 0; j < ops.length; j++) {
-            const [a1, b1, c1, d1] = ops[j](before, op.a, op.b, op.c)
+        for (let j = cpu[op.opcode].length - 1; j >= 0 ; j--) {
+            const [a1, b1, c1, d1] = cpu[op.opcode][j](before, op.a, op.b, op.c)
             const [a2, b2, c2, d2] = after
 
-            if (a1 === a2 && b1 === b2 && c1 === c2 && d1 === d2) {
-                matches++
+            if (a1 !== a2 || b1 !== b2 || c1 !== c2 || d1 !== d2) {
+                // they didn't match, so lets remove the opcode as a potential
+                cpu[op.opcode].splice(j, 1)
             }
         }
 
-        if (matches >= 3) {
+        if (cpu[op.opcode].length >= 3) {
             threeOrMore++
         }
 
@@ -173,3 +179,41 @@ for (let i = 0; i < watch.length; i++) {
 }
 
 console.log('p1', threeOrMore)
+
+const realCpu = [
+    addr,
+    eqri,
+    eqir,
+    eqrr,
+    gtir,
+    addi,
+    banr,
+    gtri,
+    bori,
+    muli,
+    seti,
+    gtrr,
+    setr,
+    borr,
+    mulr,
+    bani
+]
+
+const input = fs.readFileSync('day16input.txt', { encoding: 'utf8' }).split('\n').map(x => {
+    const [op, a, b, c] = x.split(' ').map(y => parseInt(y, 10))
+
+    return {
+        op,
+        a,
+        b,
+        c
+    }
+})
+
+let registers = [0, 0, 0, 0]
+
+input.forEach(op => {
+    registers = realCpu[op.op](registers, op.a, op.b, op.c)
+})
+
+console.log('p2', registers[0])
