@@ -160,6 +160,20 @@ for (let i = 0; i < watch.length; i++) {
         let op = unpack(watch[i + 1])
         let after = eval(watch[i + 2].replace('After: ', ''))
 
+        let matches = 0
+        for (let j = 0; j < ops.length; j++) {
+            const [a1, b1, c1, d1] = ops[j](before, op.a, op.b, op.c)
+            const [a2, b2, c2, d2] = after
+
+            if (a1 === a2 && b1 === b2 && c1 === c2 && d1 === d2) {
+                matches++
+            }
+        }
+
+        if (matches >= 3) {
+            threeOrMore++
+        }
+
         for (let j = cpu[op.opcode].length - 1; j >= 0 ; j--) {
             const [a1, b1, c1, d1] = cpu[op.opcode][j](before, op.a, op.b, op.c)
             const [a2, b2, c2, d2] = after
@@ -170,34 +184,43 @@ for (let i = 0; i < watch.length; i++) {
             }
         }
 
-        if (cpu[op.opcode].length >= 3) {
-            threeOrMore++
-        }
-
         i+=3
     }
 }
 
 console.log('p1', threeOrMore)
 
-const realCpu = [
-    addr,
-    eqri,
-    eqir,
-    eqrr,
-    gtir,
-    addi,
-    banr,
-    gtri,
-    bori,
-    muli,
-    seti,
-    gtrr,
-    setr,
-    borr,
-    mulr,
-    bani
-]
+function hasAmbigiousOpcode(cpu) {
+    for (let i = 0; i < cpu.length; i++) {
+        if (cpu[i].length > 1) {
+            return true
+        }
+    }
+
+    return false
+}
+
+function getTrueOpCodes(cpu) {
+    const opcodes = []
+
+    for (let i = 0; i < cpu.length; i++) {
+        if (cpu[i].length === 1) {
+            opcodes.push(cpu[i][0])
+        }
+    }
+
+    return opcodes
+}
+
+while (hasAmbigiousOpcode(cpu)) {
+    getTrueOpCodes(cpu).forEach((code) => {
+        for (let i = 0; i < cpu.length; i++) {
+            if (cpu[i].length > 1) {
+                cpu[i] = cpu[i].filter((x) => x !== code)
+            }
+        }
+    })
+}
 
 const input = fs.readFileSync('day16input.txt', { encoding: 'utf8' }).split('\n').map(x => {
     const [op, a, b, c] = x.split(' ').map(y => parseInt(y, 10))
@@ -213,7 +236,7 @@ const input = fs.readFileSync('day16input.txt', { encoding: 'utf8' }).split('\n'
 let registers = [0, 0, 0, 0]
 
 input.forEach(op => {
-    registers = realCpu[op.op](registers, op.a, op.b, op.c)
+    registers = cpu[op.op][0](registers, op.a, op.b, op.c)
 })
 
 console.log('p2', registers[0])
