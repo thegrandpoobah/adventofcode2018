@@ -129,23 +129,23 @@ const ops = {
     eqrr
 }
 
-let memory = [0, 0, 0, 0, 0, 0]
+let memory = [1, 0, 0, 0, 0, 0]
 
 const ipBinding = parseInt(programText.shift().replace('#ip ', ''), 10)
 const program = programText.map(x => {
     const [, opcode, register, a, b ] = x.match(/(.*) (\d*) (\d*) (\d*)/)
     return {
         opcode,
-        register: parseInt(register, 10),
-        a: parseInt(a, 10),
-        b: parseInt(b, 10)
+        a: parseInt(register, 10),
+        b: parseInt(a, 10),
+        c: parseInt(b, 10)
     }
 })
 
-for (;; memory[ipBinding]++) {
+for ( ;; memory[ipBinding]++) {
     const instruction = program[memory[ipBinding]]
 
-    memory = ops[instruction.opcode](memory, instruction.register, instruction.a, instruction.b)
+    memory = ops[instruction.opcode](memory, instruction.a, instruction.b, instruction.c)
 
     if (memory[ipBinding] < 0 || memory[ipBinding] >= program.length - 1) { 
         break
